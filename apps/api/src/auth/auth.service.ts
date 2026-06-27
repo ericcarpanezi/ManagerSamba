@@ -97,9 +97,7 @@ export class AuthService implements OnModuleInit {
 
       const rolePermissionsData = role.permissions
         .map((permissionKey) => permissionIdsByKey.get(permissionKey))
-        .filter((permissionId): permissionId is string =>
-          Boolean(permissionId),
-        )
+        .filter((permissionId): permissionId is string => Boolean(permissionId))
         .map((permissionId) => ({
           roleId: storedRole.id,
           permissionId,
@@ -167,8 +165,9 @@ export class AuthService implements OnModuleInit {
     });
 
     const roles =
-      hydratedProfile?.profileRoles.map((profileRole) => profileRole.role.name) ??
-      [];
+      hydratedProfile?.profileRoles.map(
+        (profileRole) => profileRole.role.name,
+      ) ?? [];
     const permissions = Array.from(
       new Set(
         hydratedProfile?.profileRoles.flatMap((profileRole) =>

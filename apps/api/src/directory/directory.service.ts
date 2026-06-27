@@ -111,9 +111,11 @@ export class DirectoryService {
 
     try {
       await new Promise<void>((resolve, reject) => {
-        client.bind(dn, password, (error) => {
+        client.bind(dn, password, (error: Error | null) => {
           if (error) {
-            reject(error);
+            reject(
+              new UnauthorizedException(`Falha no bind LDAP: ${error.message}`),
+            );
             return;
           }
           resolve();

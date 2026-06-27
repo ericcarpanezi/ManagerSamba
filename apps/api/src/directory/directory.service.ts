@@ -133,6 +133,21 @@ export class DirectoryService {
 
     const bindDnTemplate = process.env.LDAP_BIND_DN_TEMPLATE;
     const realm = process.env.AD_REALM;
+    const hasLdapConfig = Boolean(bindDnTemplate || realm);
+
+    if (!hasLdapConfig) {
+      const bootstrapUsername = process.env.DEV_BOOTSTRAP_USERNAME ?? 'admin';
+      const bootstrapPassword =
+        process.env.DEV_BOOTSTRAP_PASSWORD ?? 'admin123';
+
+      if (username === bootstrapUsername && password === bootstrapPassword) {
+        return;
+      }
+
+      throw new UnauthorizedException(
+        'LDAP não configurado. Use as credenciais de bootstrap de desenvolvimento.',
+      );
+    }
 
     try {
       if (bindDnTemplate) {

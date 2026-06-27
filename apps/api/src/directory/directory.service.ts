@@ -39,6 +39,24 @@ type OuNode = {
   children: OuNode[];
 };
 
+type CreateUserInput = {
+  username: string;
+  password: string;
+  displayName?: string;
+  email?: string;
+  ouDn?: string;
+};
+
+type UpdateUserInput = {
+  displayName?: string;
+  email?: string;
+};
+
+type CreateGroupInput = {
+  name: string;
+  description?: string;
+};
+
 @Injectable()
 export class DirectoryService {
   private readonly defaultUsers: SambaDirectoryUser[] = [
@@ -342,6 +360,152 @@ export class DirectoryService {
         status: 'fallback',
         message:
           'Não foi possível executar samba-tool no ambiente atual. Operação registrada para execução manual.',
+        error: error instanceof Error ? error.message : 'unknown_error',
+      };
+    }
+  }
+
+  async createUser(input: CreateUserInput) {
+    const args = ['user', 'create', input.username, input.password];
+    if (input.displayName) {
+      args.push(`--display-name=${input.displayName}`);
+    }
+    if (input.email) {
+      args.push(`--mail-address=${input.email}`);
+    }
+    if (input.ouDn) {
+      args.push(`--userou=${input.ouDn}`);
+    }
+
+    try {
+      const { stdout, stderr } = await this.runSambaTool(args);
+      return { status: 'ok', stdout, stderr };
+    } catch (error) {
+      return {
+        status: 'fallback',
+        message: 'Falha ao criar usuário via samba-tool.',
+        error: error instanceof Error ? error.message : 'unknown_error',
+      };
+    }
+  }
+
+  async updateUser(username: string, input: UpdateUserInput) {
+    try {
+      const steps: Array<{ attribute: string; value: string }> = [];
+      if (input.displayName) {
+        steps.push({ attribute: 'displayName', value: input.displayName });
+      }
+      if (input.email) {
+        steps.push({ attribute: 'mail', value: input.email });
+      }
+
+      for (const step of steps) {
+        await this.runSambaTool([
+          'user',
+          'setattribute',
+          username,
+          step.attribute,
+          step.value,
+        ]);
+      }
+
+      return {
+        status: 'ok',
+        updatedAttributes: steps.map((step) => step.attribute),
+      };
+    } catch (error) {
+      return {
+        status: 'fallback',
+        message: 'Falha ao atualizar usuário via samba-tool.',
+        error: error instanceof Error ? error.message : 'unknown_error',
+      };
+    }
+  }
+
+  async setUserEnabled(username: string, enabled: boolean) {
+    try {
+      const { stdout, stderr } = await this.runSambaTool([
+        'user',
+        enabled ? 'enable' : 'disable',
+        username,
+      ]);
+      return { status: 'ok', stdout, stderr };
+    } catch (error) {
+      return {
+        status: 'fallback',
+        message: `Falha ao ${enabled ? 'habilitar' : 'desabilitar'} usuário via samba-tool.`,
+        error: error instanceof Error ? error.message : 'unknown_error',
+      };
+    }
+  }
+
+  async moveUser(username: string, targetOuDn: string) {
+    try {
+      const { stdout, stderr } = await this.runSambaTool([
+        'user',
+        'move',
+        username,
+        targetOuDn,
+      ]);
+      return { status: 'ok', stdout, stderr };
+    } catch (error) {
+      return {
+        status: 'fallback',
+        message: 'Falha ao mover usuário via samba-tool.',
+        error: error instanceof Error ? error.message : 'unknown_error',
+      };
+    }
+  }
+
+  async createGroup(input: CreateGroupInput) {
+    const args = ['group', 'add', input.name];
+    if (input.description) {
+      args.push(`--description=${input.description}`);
+    }
+
+    try {
+      const { stdout, stderr } = await this.runSambaTool(args);
+      return { status: 'ok', stdout, stderr };
+    } catch (error) {
+      return {
+        status: 'fallback',
+        message: 'Falha ao criar grupo via samba-tool.',
+        error: error instanceof Error ? error.message : 'unknown_error',
+      };
+    }
+  }
+
+  async addGroupMember(groupName: string, memberName: string) {
+    try {
+      const { stdout, stderr } = await this.runSambaTool([
+        'group',
+        'addmembers',
+        groupName,
+        memberName,
+      ]);
+      return { status: 'ok', stdout, stderr };
+    } catch (error) {
+      return {
+        status: 'fallback',
+        message: 'Falha ao adicionar membro ao grupo via samba-tool.',
+        error: error instanceof Error ? error.message : 'unknown_error',
+      };
+    }
+  }
+
+  async removeGroupMember(groupName: string, memberName: string) {
+    try {
+      const { stdout, stderr } = await this.runSambaTool([
+        'group',
+        'removemembers',
+        groupName,
+        memberName,
+      ]);
+      return { status: 'ok', stdout, stderr };
+    } catch (error) {
+      return {
+        status: 'fallback',
+        message: 'Falha ao remover membro do grupo via samba-tool.',
         error: error instanceof Error ? error.message : 'unknown_error',
       };
     }

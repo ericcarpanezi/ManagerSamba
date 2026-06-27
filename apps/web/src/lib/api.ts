@@ -45,8 +45,68 @@ export function getUsers() {
   return request<Array<{ id: string; displayName: string; samAccountName: string; email: string; enabled: boolean }>>('/users')
 }
 
+export function createUser(payload: {
+  username: string
+  password: string
+  displayName?: string
+  email?: string
+  ouDn?: string
+}) {
+  return request('/users', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  })
+}
+
+export function updateUser(id: string, payload: { displayName?: string; email?: string }) {
+  return request(`/users/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(payload),
+  })
+}
+
+export function resetUserPassword(id: string, payload: { newPassword?: string; forceChangeAtNextLogon?: boolean }) {
+  return request(`/users/${id}/reset-password`, {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  })
+}
+
+export function setUserEnabled(id: string, enabled: boolean) {
+  return request(`/users/${id}/${enabled ? 'enable' : 'disable'}`, {
+    method: 'POST',
+  })
+}
+
+export function moveUser(id: string, payload: { targetOuDn: string }) {
+  return request(`/users/${id}/move`, {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  })
+}
+
 export function getGroups() {
   return request<Array<{ id: string; name: string; description: string; members: string[] }>>('/groups')
+}
+
+export function createGroup(payload: { name: string; description?: string }) {
+  return request('/groups', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  })
+}
+
+export function addGroupMember(groupId: string, memberName: string) {
+  return request(`/groups/${groupId}/members`, {
+    method: 'POST',
+    body: JSON.stringify({ memberName }),
+  })
+}
+
+export function removeGroupMember(groupId: string, memberName: string) {
+  return request(`/groups/${groupId}/members/${encodeURIComponent(memberName)}`, {
+    method: 'DELETE',
+  })
 }
 
 export function getComputers() {

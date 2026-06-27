@@ -1,0 +1,32 @@
+{
+  "name": "manager-samba",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Sistema Web moderno para administração de Samba 4 Active Directory (AD DC), substituindo o ADUC (Active Directory Users and Computers) com uma interface centralizada, segura e baseada em navegador.",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev --workspace api\" \"npm run dev --workspace web\"",
+    "dev:api": "npm run start:dev --workspace api",
+    "dev:web": "npm run dev --workspace web",
+    "build": "npm run build --workspace api && npm run build --workspace web",
+    "lint": "npm run lint --workspace api && npm run lint --workspace web",
+    "test": "npm run test --workspace api"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ericcarpanezi/ManagerSamba.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ericcarpanezi/ManagerSamba/issues"
+  },
+  "homepage": "https://github.com/ericcarpanezi/ManagerSamba#readme",
+  "devDependencies": {
+    "concurrently": "^10.0.3"
+  }
+}

@@ -327,3 +327,28 @@ A base local não replica o AD. Ela armazena apenas metadados de aplicação:
 3. Entregar CRUD de usuários + reset de senha
 4. Entregar árvore de OUs + movimentação de objetos
 5. Finalizar auditoria, documentação Swagger e hardening
+
+---
+
+## 15. Estado atual do repositório (bootstrap inicial)
+
+Estrutura entregue nesta etapa:
+
+- `apps/api`: NestJS com módulos de domínio (`auth`, `users`, `groups`, `computers`, `ous`, `audit`, `realtime`, `directory`)
+- `apps/api`: Swagger ativo em `/api/docs`, validação global e configuração base de logging com Winston
+- `apps/api`: Prisma inicializado com SQLite e schema base para RBAC + auditoria
+- `apps/web`: React + Vite com Tailwind, React Query, Zustand, Router e páginas iniciais por domínio
+- `package.json` raiz com workspaces e scripts de execução integrada
+
+### Como executar localmente
+
+```bash
+npm install
+npm run dev
+```
+
+URLs padrão:
+
+- API: `http://localhost:3000/api`
+- Swagger: `http://localhost:3000/api/docs`
+- Web: `http://localhost:5173`

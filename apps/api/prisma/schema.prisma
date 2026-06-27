@@ -1,0 +1,79 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model UserProfile {
+  id              String   @id @default(cuid())
+  samAccountName  String   @unique
+  displayName     String
+  email           String?
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  profileRoles    ProfileRole[]
+}
+
+model Role {
+  id              String   @id @default(cuid())
+  name            String   @unique
+  description     String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  rolePermissions RolePermission[]
+  profileRoles    ProfileRole[]
+}
+
+model Permission {
+  id              String   @id @default(cuid())
+  key             String   @unique
+  description     String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  rolePermissions RolePermission[]
+}
+
+model RolePermission {
+  id           String     @id @default(cuid())
+  roleId       String
+  permissionId String
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, permissionId])
+}
+
+model ProfileRole {
+  id         String      @id @default(cuid())
+  profileId  String
+  roleId     String
+  profile    UserProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  role       Role        @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@unique([profileId, roleId])
+}
+
+model AuditEvent {
+  id          String   @id @default(cuid())
+  action      String
+  actor       String
+  target      String
+  metadata    String?
+  ipAddress   String?
+  createdAt   DateTime @default(now())
+}
+
+model AppConfig {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  value       String
+  updatedAt   DateTime @updatedAt
+}

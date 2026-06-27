@@ -1,9 +1,19 @@
+import { useSessionStore } from '../store/session'
+
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL ??
   (typeof window !== 'undefined' ? `${window.location.protocol}//${window.location.hostname}:3000/api` : 'http://localhost:3000/api')
 
-async function request<T>(path: string): Promise<T> {
-  const response = await fetch(`${API_BASE_URL}${path}`)
+async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  const token = useSessionStore.getState().accessToken
+  const response = await fetch(`${API_BASE_URL}${path}`, {
+    ...init,
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...(init?.headers ?? {}),
+    },
+  })
   if (!response.ok) {
     throw new Error(`Erro ao consultar ${path}: ${response.status}`)
   }
@@ -49,4 +59,28 @@ export function getOuTree() {
 
 export function getAuditEvents() {
   return request<Array<{ id: string; action: string; actor: string; target: string; timestamp: string }>>('/audit/events')
+}
+
+export function login(username: string, password: string) {
+  return request<{
+    accessToken: string
+    tokenType: string
+    expiresIn: number
+    user: {
+      username: string
+      roles: string[]
+      permissions: string[]
+    }
+  }>('/auth/login', {
+    method: 'POST',
+    body: JSON.stringify({ username, password }),
+  })
+}
+
+export function me() {
+  return request<{
+    username: string
+    roles: string[]
+    permissions: string[]
+  }>('/auth/me')
 }

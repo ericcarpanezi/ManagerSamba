@@ -1,35 +1,69 @@
 import { Injectable } from '@nestjs/common';
 import { RealtimeGateway } from '../realtime/realtime.gateway';
+import { PrismaService } from '../prisma/prisma.service';
 
 type AuditEvent = {
   id: string;
   action: string;
   actor: string;
   target: string;
+  metadata?: string | null;
+  ipAddress?: string | null;
   timestamp: string;
 };
 
 @Injectable()
 export class AuditService {
-  private readonly events: AuditEvent[] = [];
+  constructor(
+    private readonly realtimeGateway: RealtimeGateway,
+    private readonly prismaService: PrismaService,
+  ) {}
 
-  constructor(private readonly realtimeGateway: RealtimeGateway) {}
+  async list() {
+    const events = await this.prismaService.auditEvent.findMany({
+      orderBy: { createdAt: 'desc' },
+      take: 200,
+    });
 
-  list() {
-    return this.events;
+    return events.map((event) => ({
+      id: event.id,
+      action: event.action,
+      actor: event.actor,
+      target: event.target,
+      metadata: event.metadata,
+      ipAddress: event.ipAddress,
+      timestamp: event.createdAt.toISOString(),
+    }));
   }
 
-  record(action: string, actor: string, target: string): AuditEvent {
-    const event = {
-      id: `evt-${Date.now()}`,
+  async record(
+    action: string,
+    actor: string,
+    target: string,
+    metadata?: string,
+    ipAddress?: string,
+  ): Promise<AuditEvent> {
+    const event = await this.prismaService.auditEvent.create({
+      data: {
+        action,
+        actor,
+        target,
+        metadata,
+        ipAddress,
+      },
+    });
+
+    const normalizedEvent: AuditEvent = {
+      id: event.id,
       action,
       actor,
       target,
-      timestamp: new Date().toISOString(),
+      metadata: event.metadata,
+      ipAddress: event.ipAddress,
+      timestamp: event.createdAt.toISOString(),
     };
 
-    this.events.unshift(event);
-    this.realtimeGateway.emitAuditEvent(event);
-    return event;
+    this.realtimeGateway.emitAuditEvent(normalizedEvent);
+    return normalizedEvent;
   }
 }

@@ -1,4 +1,5 @@
-import { NavLink, Outlet, useLocation } from 'react-router-dom'
+import { NavLink, Navigate, Outlet, useLocation } from 'react-router-dom'
+import { useSessionStore } from './store/session'
 
 const navItems = [
   { to: '/', label: 'Dashboard', description: 'Visao geral do ambiente' },
@@ -10,8 +11,13 @@ const navItems = [
 ]
 
 function App() {
+  const { accessToken, username, clearSession } = useSessionStore()
   const location = useLocation()
   const activeItem = navItems.find((item) => (item.to === '/' ? location.pathname === '/' : location.pathname.startsWith(item.to)))
+
+  if (!accessToken) {
+    return <Navigate to="/login" replace />
+  }
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100">
@@ -41,7 +47,19 @@ function App() {
               </NavLink>
             ))}
           </nav>
-          <div className="border-t border-slate-800 px-6 py-4 text-xs text-slate-500">v0.1.0 Bootstrap</div>
+          <div className="space-y-3 border-t border-slate-800 px-6 py-4">
+            <p className="text-xs text-slate-400">
+              Logado como <span className="font-semibold text-slate-200">{username}</span>
+            </p>
+            <button
+              type="button"
+              className="w-full rounded-md border border-slate-700 px-3 py-2 text-sm text-slate-200 hover:bg-slate-800"
+              onClick={clearSession}
+            >
+              Sair
+            </button>
+            <p className="text-xs text-slate-500">v0.1.0 Bootstrap</p>
+          </div>
         </aside>
 
         <div className="flex-1">

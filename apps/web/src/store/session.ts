@@ -1,13 +1,44 @@
 import { create } from 'zustand'
+import { persist } from 'zustand/middleware'
 
 type SessionState = {
+  accessToken: string | null
   username: string | null
-  setUsername: (username: string) => void
+  roles: string[]
+  permissions: string[]
+  setSession: (session: {
+    accessToken: string
+    username: string
+    roles: string[]
+    permissions: string[]
+  }) => void
   clearSession: () => void
 }
 
-export const useSessionStore = create<SessionState>((set) => ({
-  username: null,
-  setUsername: (username) => set({ username }),
-  clearSession: () => set({ username: null }),
-}))
+export const useSessionStore = create<SessionState>()(
+  persist(
+    (set) => ({
+      accessToken: null,
+      username: null,
+      roles: [],
+      permissions: [],
+      setSession: (session) =>
+        set({
+          accessToken: session.accessToken,
+          username: session.username,
+          roles: session.roles,
+          permissions: session.permissions,
+        }),
+      clearSession: () =>
+        set({
+          accessToken: null,
+          username: null,
+          roles: [],
+          permissions: [],
+        }),
+    }),
+    {
+      name: 'ag-directory-session',
+    },
+  ),
+)

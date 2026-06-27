@@ -2,30 +2,32 @@ import {
   Body,
   Controller,
   Get,
-  Headers,
   Post,
-  UnauthorizedException,
+  UseGuards,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
+import { Public } from './decorators/public.decorator';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { CurrentUser } from './decorators/current-user.decorator';
+import { AuthUser } from './types/auth-user';
 
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
+  @Public()
   @Post('login')
   async login(@Body() body: LoginDto) {
     return this.authService.login(body.username, body.password);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Get('me')
-  me(@Headers('x-user') username?: string) {
-    if (!username) {
-      throw new UnauthorizedException(
-        'Header x-user é obrigatório neste bootstrap',
-      );
+  me(@CurrentUser() user?: AuthUser) {
+    if (!user) {
+      return { username: null, roles: [], permissions: [] };
     }
-
-    return this.authService.me(username);
+    return this.authService.me(user);
   }
 }

@@ -4,6 +4,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { execFile } from 'node:child_process';
+import * as ldap from 'ldapjs';
 import { promisify } from 'node:util';
 
 const execFileAsync = promisify(execFile);
@@ -91,9 +92,59 @@ export class DirectoryService {
     },
   ];
 
-  validateCredentials(username: string, password: string): void {
+  private async ldapBind(dn: string, password: string) {
+    const ldapUrl = process.env.LDAP_URL;
+    if (!ldapUrl) {
+      throw new UnauthorizedException('LDAP_URL não configurado');
+    }
+
+    const client = ldap.createClient({
+      url: ldapUrl,
+      reconnect: false,
+      timeout: 8_000,
+      connectTimeout: 8_000,
+      tlsOptions:
+        process.env.LDAP_TLS_REJECT_UNAUTHORIZED === 'false'
+          ? { rejectUnauthorized: false }
+          : undefined,
+    });
+
+    try {
+      await new Promise<void>((resolve, reject) => {
+        client.bind(dn, password, (error) => {
+          if (error) {
+            reject(error);
+            return;
+          }
+          resolve();
+        });
+      });
+    } finally {
+      client.unbind();
+    }
+  }
+
+  async validateCredentials(username: string, password: string): Promise<void> {
     if (!username || !password) {
       throw new UnauthorizedException('Credenciais inválidas');
+    }
+
+    const bindDnTemplate = process.env.LDAP_BIND_DN_TEMPLATE;
+    const realm = process.env.AD_REALM;
+
+    try {
+      if (bindDnTemplate) {
+        const bindDn = bindDnTemplate.replace(/\{username\}/g, username);
+        await this.ldapBind(bindDn, password);
+        return;
+      }
+
+      if (realm) {
+        await this.ldapBind(`${username}@${realm}`, password);
+        return;
+      }
+    } catch {
+      throw new UnauthorizedException('Falha de autenticação LDAP');
     }
   }
 
@@ -241,6 +292,31 @@ export class DirectoryService {
       }));
     } catch {
       return this.defaultOuTree;
+    }
+  }
+
+  async resetUserPassword(username: string, newPassword?: string) {
+    const args = ['user', 'setpassword', username];
+    if (newPassword) {
+      args.push(`--newpassword=${newPassword}`);
+    } else {
+      args.push('--random-password');
+    }
+
+    try {
+      const { stdout, stderr } = await this.runSambaTool(args);
+      return {
+        status: 'ok',
+        stdout,
+        stderr,
+      };
+    } catch (error) {
+      return {
+        status: 'fallback',
+        message:
+          'Não foi possível executar samba-tool no ambiente atual. Operação registrada para execução manual.',
+        error: error instanceof Error ? error.message : 'unknown_error',
+      };
     }
   }
 }

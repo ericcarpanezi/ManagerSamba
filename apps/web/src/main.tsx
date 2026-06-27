@@ -12,10 +12,15 @@ import { GroupsPage } from './pages/groups.tsx'
 import { ComputersPage } from './pages/computers.tsx'
 import { OusPage } from './pages/ous.tsx'
 import { AuditPage } from './pages/audit.tsx'
+import { LoginPage } from './pages/login.tsx'
 
 const queryClient = new QueryClient()
 
 const router = createBrowserRouter([
+  {
+    path: '/login',
+    element: <LoginPage />,
+  },
   {
     path: '/',
     element: <App />,

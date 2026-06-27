@@ -7,5 +7,6 @@ import { RealtimeModule } from '../realtime/realtime.module';
   imports: [RealtimeModule],
   controllers: [AuditController],
   providers: [AuditService],
+  exports: [AuditService],
 })
 export class AuditModule {}

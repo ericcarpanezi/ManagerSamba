@@ -13,7 +13,11 @@ export class AuditController {
   @Post('events')
   create(
     @Body()
-    body: { action: string; actor: string; target: string },
+    body: {
+      action: string;
+      actor: string;
+      target: string;
+    },
   ) {
     return this.auditService.record(body.action, body.actor, body.target);
   }

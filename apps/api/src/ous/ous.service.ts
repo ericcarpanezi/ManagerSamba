@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 
-type OuNode = {
+export type OuNode = {
   id: string;
   dn: string;
   name: string;

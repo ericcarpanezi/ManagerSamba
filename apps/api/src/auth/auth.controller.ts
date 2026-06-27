@@ -1,4 +1,11 @@
-import { Body, Controller, Get, Headers, Post, UnauthorizedException } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Headers,
+  Post,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 
@@ -14,7 +21,9 @@ export class AuthController {
   @Get('me')
   me(@Headers('x-user') username?: string) {
     if (!username) {
-      throw new UnauthorizedException('Header x-user é obrigatório neste bootstrap');
+      throw new UnauthorizedException(
+        'Header x-user é obrigatório neste bootstrap',
+      );
     }
 
     return this.authService.me(username);

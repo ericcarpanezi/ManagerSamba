@@ -10,7 +10,7 @@ export class AuthService {
   ) {}
 
   async login(username: string, password: string) {
-    await this.directoryService.validateCredentials(username, password);
+    this.directoryService.validateCredentials(username, password);
 
     const payload = {
       sub: username,

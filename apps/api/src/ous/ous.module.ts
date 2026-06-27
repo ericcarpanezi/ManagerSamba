@@ -4,6 +4,6 @@ import { OusService } from './ous.service';
 
 @Module({
   controllers: [OusController],
-  providers: [OusService]
+  providers: [OusService],
 })
 export class OusModule {}

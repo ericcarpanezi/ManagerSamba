@@ -132,25 +132,27 @@ export class DirectoryService {
       throw new UnauthorizedException('Credenciais inválidas');
     }
 
+    const bootstrapLoginEnabled =
+      process.env.DEV_ENABLE_BOOTSTRAP_LOGIN !== 'false';
+    const bootstrapUsername = process.env.DEV_BOOTSTRAP_USERNAME ?? 'admin';
+    const bootstrapPassword = process.env.DEV_BOOTSTRAP_PASSWORD ?? 'admin123';
+
+    if (
+      bootstrapLoginEnabled &&
+      normalizedUsername === bootstrapUsername.trim() &&
+      password === bootstrapPassword
+    ) {
+      return;
+    }
+
     const ldapUrl = process.env.LDAP_URL;
     const bindDnTemplate = process.env.LDAP_BIND_DN_TEMPLATE;
     const realm = process.env.AD_REALM;
     const hasLdapConfig = Boolean(ldapUrl && (bindDnTemplate || realm));
 
     if (!hasLdapConfig) {
-      const bootstrapUsername = process.env.DEV_BOOTSTRAP_USERNAME ?? 'admin';
-      const bootstrapPassword =
-        process.env.DEV_BOOTSTRAP_PASSWORD ?? 'admin123';
-
-      if (
-        normalizedUsername === bootstrapUsername.trim() &&
-        password === bootstrapPassword
-      ) {
-        return;
-      }
-
       throw new UnauthorizedException(
-        'LDAP não configurado. Use as credenciais de bootstrap de desenvolvimento.',
+        'LDAP não configurado e login bootstrap desabilitado ou credenciais inválidas.',
       );
     }
 

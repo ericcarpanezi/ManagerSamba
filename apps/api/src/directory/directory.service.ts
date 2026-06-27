@@ -127,20 +127,25 @@ export class DirectoryService {
   }
 
   async validateCredentials(username: string, password: string): Promise<void> {
-    if (!username || !password) {
+    const normalizedUsername = username.trim();
+    if (!normalizedUsername || !password) {
       throw new UnauthorizedException('Credenciais inválidas');
     }
 
+    const ldapUrl = process.env.LDAP_URL;
     const bindDnTemplate = process.env.LDAP_BIND_DN_TEMPLATE;
     const realm = process.env.AD_REALM;
-    const hasLdapConfig = Boolean(bindDnTemplate || realm);
+    const hasLdapConfig = Boolean(ldapUrl && (bindDnTemplate || realm));
 
     if (!hasLdapConfig) {
       const bootstrapUsername = process.env.DEV_BOOTSTRAP_USERNAME ?? 'admin';
       const bootstrapPassword =
         process.env.DEV_BOOTSTRAP_PASSWORD ?? 'admin123';
 
-      if (username === bootstrapUsername && password === bootstrapPassword) {
+      if (
+        normalizedUsername === bootstrapUsername.trim() &&
+        password === bootstrapPassword
+      ) {
         return;
       }
 
@@ -151,13 +156,16 @@ export class DirectoryService {
 
     try {
       if (bindDnTemplate) {
-        const bindDn = bindDnTemplate.replace(/\{username\}/g, username);
+        const bindDn = bindDnTemplate.replace(
+          /\{username\}/g,
+          normalizedUsername,
+        );
         await this.ldapBind(bindDn, password);
         return;
       }
 
       if (realm) {
-        await this.ldapBind(`${username}@${realm}`, password);
+        await this.ldapBind(`${normalizedUsername}@${realm}`, password);
         return;
       }
     } catch {

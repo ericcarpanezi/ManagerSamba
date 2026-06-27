@@ -1,10 +1,14 @@
 import { useQuery } from '@tanstack/react-query'
-import { getHealth } from '../lib/api'
+import { getDirectoryStatus, getHealth } from '../lib/api'
 
 export function DashboardPage() {
   const healthQuery = useQuery({
     queryKey: ['health'],
     queryFn: getHealth,
+  })
+  const directoryStatusQuery = useQuery({
+    queryKey: ['directory-status'],
+    queryFn: getDirectoryStatus,
   })
 
   return (
@@ -40,6 +44,35 @@ export function DashboardPage() {
           <p className="mt-2">
             <span className="font-medium">Status:</span> {healthQuery.data.status} ({healthQuery.data.timestamp})
           </p>
+        )}
+      </div>
+
+      <div className="rounded-xl border border-slate-800 bg-slate-900 p-4">
+        <p className="text-sm text-slate-400">Integração Samba AD</p>
+        {directoryStatusQuery.isLoading && <p className="mt-2">Carregando status...</p>}
+        {directoryStatusQuery.isError && <p className="mt-2 text-rose-400">Falha ao verificar integração com o Samba.</p>}
+        {directoryStatusQuery.data && (
+          <div className="mt-2 space-y-1 text-sm">
+            <p>
+              <span className="font-medium">Modo:</span> {directoryStatusQuery.data.mode}
+            </p>
+            <p>
+              <span className="font-medium">Origem:</span> {directoryStatusQuery.data.source}
+            </p>
+            <p>
+              <span className="font-medium">samba-tool:</span>{' '}
+              {directoryStatusQuery.data.sambaToolAvailable ? 'disponivel' : 'indisponivel'}
+            </p>
+            <p>
+              <span className="font-medium">LDAP configurado:</span> {directoryStatusQuery.data.ldapConfigured ? 'sim' : 'nao'}
+            </p>
+            {directoryStatusQuery.data.domainInfo && (
+              <p className="text-slate-300">
+                <span className="font-medium">Dominio:</span> {directoryStatusQuery.data.domainInfo.domain ?? '-'} |{' '}
+                {directoryStatusQuery.data.domainInfo.realm ?? '-'}
+              </p>
+            )}
+          </div>
         )}
       </div>
     </section>

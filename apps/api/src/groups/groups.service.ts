@@ -1,24 +1,11 @@
 import { Injectable } from '@nestjs/common';
-
-type DirectoryGroup = {
-  id: string;
-  name: string;
-  description: string;
-  members: string[];
-};
+import { DirectoryService } from '../directory/directory.service';
 
 @Injectable()
 export class GroupsService {
-  private readonly groups: DirectoryGroup[] = [
-    {
-      id: 'g-domain-admins',
-      name: 'Domain Admins',
-      description: 'Administradores do domínio',
-      members: ['administrator'],
-    },
-  ];
+  constructor(private readonly directoryService: DirectoryService) {}
 
-  list() {
-    return this.groups;
+  async list() {
+    return this.directoryService.listGroups();
   }
 }

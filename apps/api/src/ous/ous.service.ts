@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { DirectoryService } from '../directory/directory.service';
 
 export type OuNode = {
   id: string;
@@ -9,27 +10,9 @@ export type OuNode = {
 
 @Injectable()
 export class OusService {
-  tree(): OuNode[] {
-    return [
-      {
-        id: 'ou-root-users',
-        dn: 'OU=Users,DC=empresa,DC=local',
-        name: 'Users',
-        children: [
-          {
-            id: 'ou-admins',
-            dn: 'OU=Admins,OU=Users,DC=empresa,DC=local',
-            name: 'Admins',
-            children: [],
-          },
-        ],
-      },
-      {
-        id: 'ou-root-computers',
-        dn: 'OU=Computers,DC=empresa,DC=local',
-        name: 'Computers',
-        children: [],
-      },
-    ];
+  constructor(private readonly directoryService: DirectoryService) {}
+
+  async tree(): Promise<OuNode[]> {
+    return this.directoryService.listOuTree();
   }
 }

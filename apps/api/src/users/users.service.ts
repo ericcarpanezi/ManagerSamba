@@ -1,29 +1,12 @@
 import { Injectable } from '@nestjs/common';
-
-type DirectoryUser = {
-  id: string;
-  displayName: string;
-  samAccountName: string;
-  email: string;
-  enabled: boolean;
-  ouDn: string;
-};
+import { DirectoryService } from '../directory/directory.service';
 
 @Injectable()
 export class UsersService {
-  private readonly users: DirectoryUser[] = [
-    {
-      id: 'u-admin',
-      displayName: 'Administrador Samba',
-      samAccountName: 'administrator',
-      email: 'administrator@empresa.local',
-      enabled: true,
-      ouDn: 'OU=Admins,DC=empresa,DC=local',
-    },
-  ];
+  constructor(private readonly directoryService: DirectoryService) {}
 
-  list() {
-    return this.users;
+  async list() {
+    return this.directoryService.listUsers();
   }
 
   resetPassword(id: string) {
